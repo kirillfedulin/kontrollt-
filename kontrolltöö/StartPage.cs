@@ -1,59 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Text;
-using System.Threading;
 
 namespace kontrolltöö
 {
     internal class StartPage
     {
-        static void Main()
+        static void Main(string[] args)
         {
             while (true)
             {
-                    Console.WriteLine("Plaun sissestage mida te tahate: ");
-                    Console.WriteLine("1. Logi pidamine");
-                    Console.WriteLine("2. Sõnastik ja Otsing");
-                    Console.WriteLine("3. Failist lugemine ja analüüs");
-                    Console.WriteLine("4. Oma Klassi loomine");
-                    Console.WriteLine("5.  Autopargi haldus");
-                    Console.WriteLine("0.  EXIT");
-
-                    string valik = Console.ReadLine();
-                    if (valik == "1")
-                    {
-                        AndmeFunktsioonid.AndmeFunktsjonijiet();
-                    }
-                    else if (valik == "2")
-                    {
-                        AndmeFunktsioonid.RiigiOtsing();
-                    }
-                    else if (valik == "3")
-                    {
-                        AndmeFunktsioonid.LoeJaArvuta();
-                    }
-                    else if (valik == "4")
-                    {
-                        Console.WriteLine("Mis mudel teil on?");
-
-
-                    }
-                    else if (valik == "5")
-                    {
-                        AndmeFunktsioonid.AndmeFunktsioonidd();
-                    }
-                    else if (valik == "0")
-                    {
+               
+                Console.WriteLine("1. KirjutaLogi");
+                Console.WriteLine("2. RiigiOtsing");
+                Console.WriteLine("3. LoeJaArvuta");
+                Console.WriteLine("4. HaldaAutosid");
+                
+                string valik = Console.ReadLine();
+                switch (valik)
+                {
+                    case "1":
+                        Console.WriteLine("sisesta oma nimi: ");
+                        string kasutaja = Console.ReadLine();
+                        AndmeFunktsioonid.KirjutaLogi($"{kasutaja} logis sisse");
                         break;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Palun sisestage õiged numbrid!");
-                    }
-                }
 
+                    case "2":
+                       
+                        Dictionary<string, string> riigid = new Dictionary<string, string>()
+                            {
+                                { "EE", "Eesti" },
+                                { "FI", "Soome" },
+                                { "DE", "Saksamaa" },
+                                { "UA", "Ukraine" }
+                            };
+                        AndmeFunktsioonid.RiigiOtsing(riigid);
+                        break;
+
+                    case "3":
+                        string path = @"..\..\..\arvud.txt";
+
+                        string[] data = new string[]
+                            {
+                            "1, 3, 7, 10, 15, 20",
+                            };
+                        File.WriteAllLines(path, data, Encoding.UTF8);
+                        AndmeFunktsioonid.LoeJaArvuta();
+                        break;
+
+                    case "4":
+                        Auto.HaldaAutosid();
+                        break;
+                           
+                }
             }
-            
         }
     }
 }
