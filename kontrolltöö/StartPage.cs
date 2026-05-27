@@ -1,56 +1,63 @@
-using System.Text;
+using kontrolltöö;
 
-namespace kontrolltöö
+namespace kontrolltöö;
+
+class StartPage
 {
-    internal class StartPage
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
+        AndmeFunktsioonid.KirjutaLogi("Programm käivitati");
+
+        File.WriteAllText("arvud.txt", "10, 20, 5, 100, 4");
+
+        bool jatka = true;
+
+        while (jatka)
         {
-            while (true)
+            Console.WriteLine("1. Kirjuta logi");
+            Console.WriteLine("2. Riigi otsing");
+            Console.WriteLine("3. Loe arvud failist ja arvuta");
+            Console.WriteLine("4. Halda autosid");
+            Console.WriteLine("0. Välju");
+            Console.Write("\nSinu valik: ");
+
+            string valik = Console.ReadLine() ?? "";
+
+            switch (valik)
             {
-               
-                Console.WriteLine("1. KirjutaLogi");
-                Console.WriteLine("2. RiigiOtsing");
-                Console.WriteLine("3. LoeJaArvuta");
-                Console.WriteLine("4. HaldaAutosid");
-                
-                string valik = Console.ReadLine();
-                switch (valik)
-                {
-                    case "1":
-                        Console.WriteLine("sisesta oma nimi: ");
-                        string kasutaja = Console.ReadLine();
-                        AndmeFunktsioonid.KirjutaLogi($"{kasutaja} logis sisse");
-                        break;
+                case "1":
+                    Console.Write("Sisesta logiteade: ");
+                    string teade = Console.ReadLine() ?? "Kasutaja sisestas tühja teate";
+                    AndmeFunktsioonid.KirjutaLogi(teade);
+                    Console.WriteLine("Logi kirjutatud faili 'logi.txt'.");
+                    break;
 
-                    case "2":
-                       
-                        Dictionary<string, string> riigid = new Dictionary<string, string>()
-                            {
-                                { "EE", "Eesti" },
-                                { "FI", "Soome" },
-                                { "DE", "Saksamaa" },
-                                { "UA", "Ukraine" }
-                            };
-                        AndmeFunktsioonid.RiigiOtsing(riigid);
-                        break;
+                case "2":
+                    AndmeFunktsioonid.RiigiOtsing();
+                    break;
 
-                    case "3":
-                        string path = @"..\..\..\arvud.txt";
+                case "3":
+                    Tuple<int, double> tulemus = AndmeFunktsioonid.LoeJaArvuta();
+                    if (tulemus.Item1 != 0 || tulemus.Item2 != 0)
+                    {
+                        Console.WriteLine($"Summa: {tulemus.Item1}");
+                        Console.WriteLine($"Keskmine: {tulemus.Item2:F2}");
+                    }
+                    break;
 
-                        string[] data = new string[]
-                            {
-                            "1, 3, 7, 10, 15, 20",
-                            };
-                        File.WriteAllLines(path, data, Encoding.UTF8);
-                        AndmeFunktsioonid.LoeJaArvuta();
-                        break;
+                case "4":
+                    AndmeFunktsioonid.HaldaAutosid();
+                    break;
 
-                    case "4":
-                        Auto.HaldaAutosid();
-                        break;
-                           
-                }
+                case "0":
+                    AndmeFunktsioonid.KirjutaLogi("Programm lõpetati");
+                    jatka = false;
+                    Console.WriteLine("Head aega!");
+                    break;
+
+                default:
+                    Console.WriteLine("Vigane valik. Proovi uuesti.");
+                    break;
             }
         }
     }

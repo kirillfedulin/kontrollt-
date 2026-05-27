@@ -1,121 +1,141 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Metrics;
-using System.Globalization;
-using System.IO;
-using System.Text;
-using static System.Net.Mime.MediaTypeNames;
+namespace kontrolltöö;
 
-namespace kontrolltöö
+public static class AndmeFunktsioonid
 {
-    public class Auto
+    public static void KirjutaLogi(string teade)
     {
-        public string Mudel { get; set; }
-        public double KutuseKulu { get; set; }
-        public double PaagisOnKutust { get; set; }
+        using StreamWriter writer = new StreamWriter("logi.txt", append: true);
+        writer.WriteLine($"[{DateTime.Now:dd.MM.yyyy HH:mm:ss}] - {teade}");
+    }
 
-        public Auto(string mudel, double kutuseKulu, double paagisOnKutust)
+    public static void RiigiOtsing()
+    {
+        Dictionary<string, string> riigid = new Dictionary<string, string>
         {
-            Mudel = mudel;
-            KutuseKulu = kutuseKulu;
-            PaagisOnKutust = paagisOnKutust;
+            { "EE", "Eesti" },
+            { "FI", "Soome" },
+            { "DE", "Saksamaa" },
+            { "FR", "Prantsusmaa" },
+            { "LV", "Läti" }
+        };
+            
+        Console.Write("Sisesta riigi kood: ");
+        string kood = Console.ReadLine()?.ToUpper() ?? "";
+
+        if (riigid.ContainsKey(kood))
+        {
+            Console.WriteLine($"Riik: {riigid[kood]}");
         }
-        public double ArvutaSoiduulatus()
+        else
         {
-            double kogus = (PaagisOnKutust / KutuseKulu) * 100;
-            Console.WriteLine("Soiduulatus: " + kogus);
-            return kogus;
+            Console.Write($"Koodi '{kood}' ei leitud. Mis riik see on? ");
+            string uusRiik = Console.ReadLine() ?? "";
+            riigid[kood] = uusRiik;
+            Console.WriteLine($"Lisatud: {kood} -> {uusRiik}");
         }
 
-        public static void HaldaAutosid()
+        Console.WriteLine("\nKõik riigid sõnastikus:");
+        foreach (KeyValuePair<string, string> paar in riigid)
         {
-            List<Auto> auto = new List<Auto>()
+            Console.WriteLine($"  {paar.Key}: {paar.Value}");
+        }
+    }
+
+    public static Tuple<int, double> LoeJaArvuta()
+    {
+        try
+        {
+            string sisu = File.ReadAllText("arvud.txt");
+            string[] osad = sisu.Split(',');
+
+            int summa = 0;
+            int count = 0;
+
+            foreach (string osa in osad)
+            {
+                string trimmed = osa.Trim();
+                if (!string.IsNullOrEmpty(trimmed))
+                {
+                    summa += int.Parse(trimmed);
+                    count++;
+                }
+            }
+
+            double keskmine = count > 0 ? (double)summa / count : 0;
+            return new Tuple<int, double>(summa, keskmine);
+        }
+        catch (FileNotFoundException)
+        {
+            Console.WriteLine("Viga: Faili 'arvud.txt' ei leitud.");
+            return new Tuple<int, double>(0, 0);
+        }
+        catch (FormatException)
+        {
+            Console.WriteLine("Viga: Failis on vigane number.");
+            return new Tuple<int, double>(0, 0);
+        }
+    }
+
+    public static void HaldaAutosid()
+    {
+        List<Auto> autod = new List<Auto>
         {
             new Auto("Toyota", 5.5, 40),
             new Auto("BMW", 8.0, 15),
-            new Auto("Audi", 6.5, 8)
+            new Auto("Ford", 6.2, 55),
+            new Auto("Audi", 7.1, 8),
+            new Auto("Honda", 4.8, 30)
         };
-            Auto parim = auto.OrderByDescending(a => a.ArvutaSoiduulatus()).First();
-            Console.WriteLine("Suurima sõiduulatusega auto: " + parim.Mudel);
 
-            var vajaTankida = auto.Where(a => a.PaagisOnKutust < 10);
-            Console.WriteLine("Vajavad tankimist:");
-            foreach (var a in vajaTankida)
+        Auto suurimSoiduulatusega = autod[0];
+        foreach (Auto auto in autod)
+        {
+            if (auto.ArvutaSoiduulatus() > suurimSoiduulatusega.ArvutaSoiduulatus())
             {
-                Console.WriteLine(a.Mudel);
+                suurimSoiduulatusega = auto;
             }
-
-  
-            using (StreamWriter sw = new StreamWriter("autod.txt"))
-            {
-                foreach (var a in auto)
-                {
-                    sw.WriteLine($"{a.Mudel},{a.KutuseKulu},{a.PaagisOnKutust}");
-                }
-            }
-
-
         }
+
+        Console.WriteLine($"\nSuurima sõiduulatusega auto: {suurimSoiduulatusega.Mudel}");
+        Console.WriteLine($"  Sõiduulatus: {suurimSoiduulatusega.ArvutaSoiduulatus():F1} km");
+
+        Console.WriteLine("\nAutod, mis vajavad kohe tankimist (alla 10L):");
+        List<Auto> tankimistVajavad = new List<Auto>();
+        foreach (Auto auto in autod)
+        {
+            if (auto.PaagisOnKutust < 10)
+            {
+                tankimistVajavad.Add(auto);
+                Console.WriteLine($"  {auto.Mudel} ({auto.PaagisOnKutust}L)");
+            }
+        }
+
+        if (tankimistVajavad.Count == 0)
+        {
+            Console.WriteLine("  Kõigil autodele piisab kütust.");
+        }
+
+        SalvestaAutostatistika(autod);
     }
-    public class AndmeFunktsioonid
+
+    private static void SalvestaAutostatistika(List<Auto> autod)
     {
-        public static void KirjutaLogi(string kasutaja)
+        using StreamWriter writer = new StreamWriter("autopark.txt", append: false);
+        writer.WriteLine($"=== Autopargi statistika ({DateTime.Now:dd.MM.yyyy HH:mm:ss}) ===");
+        writer.WriteLine();
+
+        double kogusoiduulatus = 0;
+        foreach (Auto auto in autod)
         {
-            string path = @"..\..\..\logi.txt";
-            string date = DateTime.Now.ToString();
-
-            using (StreamWriter sw = new StreamWriter(path, true))
-            {
-                sw.WriteLine($"{date} - {kasutaja}");
-            }
-        }
-        public static void RiigiOtsing(Dictionary<string, string> riigid)
-        {
-            Console.Write("sisesta riik:  ");
-            string riik = Console.ReadLine().ToUpper();
-
-            if (riigid.ContainsKey(riik))
-            {
-                Console.WriteLine("Riik: " + riigid[riik]);
-            }
-            else
-            {
-                Console.Write("Riiki ei leitud. Sisesta riigi nimi: ");
-
-            }
-
+            double soiduulatus = auto.ArvutaSoiduulatus();
+            kogusoiduulatus += soiduulatus;
+            writer.WriteLine($"Mudel: {auto.Mudel,-10} | Kütus: {auto.PaagisOnKutust,5:F1}L | Kulu: {auto.KutuseKulu,4:F1}L/100km | Ulatus: {soiduulatus,7:F1}km");
         }
 
-        public static Tuple<int, double> LoeJaArvuta()
-        {
-            try
-            {
-                string text = File.ReadAllText("arvud.txt");
-                string[] osad = text.Split(',');
+        writer.WriteLine();
+        writer.WriteLine($"Keskmine sõiduulatus: {kogusoiduulatus / autod.Count:F1} km");
+        writer.WriteLine($"Autode arv kokku: {autod.Count}");
 
-                int summa = 0;
-                foreach (string s in osad)
-                {
-                    summa += int.Parse(s);
-                }
-
-                double keskmine = summa / osad.Length;
-                Console.WriteLine($"summa: {summa}; keakmine: {Math.Round(keskmine), 2}");
-                return new Tuple<int, double>(summa, keskmine);
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Viga: " + e);
-                return new Tuple<int, double>(0, 0);
-            }
-        }
-       
-
-
-
+        Console.WriteLine("\nAutopargi statistika salvestatud faili 'autopark.txt'.");
     }
-
-    
 }
-    
